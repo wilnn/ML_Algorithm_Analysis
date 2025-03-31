@@ -64,7 +64,7 @@ def data_loader_and_processor(scaler=None):
     x.loc[:, 'relationship'], unique_values6 = pd.factorize(x["relationship"])
     x.loc[:, 'race'], unique_values7 = pd.factorize(x["race"])
     x.loc[:, 'sex'], unique_values8 = pd.factorize(x["sex"])
-    y.loc[:, "income"], unique_values9 = pd.factorize(y["income"])
+    y.loc[:, "income"], unique_values9 = pd.factorize(y["income"]) # 0 is <=50k, 1 is >50k
 
 
     x = x.iloc[:, :].values
