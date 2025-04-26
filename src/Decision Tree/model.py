@@ -1,8 +1,8 @@
 from sklearn.tree import DecisionTreeClassifier
 
 
-#model before tunning hyperparameters
-'''def get_model():
+'''#model before tunning hyperparameters
+def get_model():
     model = DecisionTreeClassifier(criterion='gini', max_depth=5, random_state=42)
     return model
 
@@ -10,8 +10,7 @@ if __name__ == "__main__":
     model = get_model()
     print(model)'''
 
-from sklearn.tree import DecisionTreeClassifier
-
+#model after tuning hyperparameters
 def get_model():
     model = DecisionTreeClassifier(
         criterion='entropy',        # use 'entropy' instead of 'gini' for better splits
@@ -26,3 +25,5 @@ def get_model():
 if __name__ == "__main__":
     model = get_model()
     print(model)
+
+
