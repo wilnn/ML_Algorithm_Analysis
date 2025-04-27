@@ -3,8 +3,10 @@ import pandas as pd
 import joblib
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+import shap
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, roc_curve, auc
 from sklearn.tree import plot_tree
+
 
 def evaluate():
     # Load test data and labels from .npy files
@@ -39,6 +41,44 @@ def evaluate():
     plt.tight_layout()
     plt.savefig("results/results/confusion_matrix.png")
     plt.show()
+
+     # ROC Curve
+    if len(np.unique(y_test)) == 2:  # binary classification check
+        y_proba = model.predict_proba(X_test)[:, 1]
+        fpr, tpr, thresholds = roc_curve(y_test, y_proba)
+        roc_auc = auc(fpr, tpr)
+
+        plt.figure(figsize=(6, 5))
+        plt.plot(fpr, tpr, label=f"ROC Curve (area = {roc_auc:.2f})")
+        plt.plot([0, 1], [0, 1], "k--")
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel("False Positive Rate")
+        plt.ylabel("True Positive Rate")
+        plt.title("Receiver Operating Characteristic (ROC) Curve")
+        plt.legend(loc="lower right")
+        plt.savefig("results/results/decision_tree_roc_curve.png")
+        plt.show()
+    else:
+        print("ROC Curve skipped (not a binary classification).")
+
+    # SHAP Values (only if input size is reasonable)
+    if X_test.shape[0] > 500:
+        # To make it fast, sample 500 test examples
+        X_sample = shap.sample(X_test, 500, random_state=42)
+    else:
+        X_sample = X_test
+
+    explainer = shap.TreeExplainer(model)
+    shap_values = explainer.shap_values(X_sample)
+
+    # Plot SHAP Summary Plot
+    plt.figure()
+    shap.summary_plot(shap_values, X_sample, show=False)
+    plt.title("SHAP Summary Plot")
+    plt.savefig("results/results/decision_tree_shap_summary.png")
+    plt.show()
+
 
     # 🔷 Visualize the Decision Tree
     # If your model was trained on a DataFrame, feature names might be available
