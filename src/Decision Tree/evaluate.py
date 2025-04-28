@@ -31,6 +31,24 @@ def evaluate():
     print(f"Accuracy: {accuracy}")
     print(report)
 
+     # Plot Accuracy Pie Chart
+    correct = np.sum(y_pred == y_test)
+    incorrect = np.sum(y_pred != y_test)
+
+    plt.figure(figsize=(6, 6))
+    plt.pie(
+        [correct, incorrect],
+        labels=["Correct", "Incorrect"],
+        colors=["#4CAF50", "#F44336"],
+        autopct='%1.1f%%',
+        startangle=90,
+        explode=(0.05, 0.05),
+        shadow=True
+    )
+    plt.title("Prediction Accuracy")
+    plt.savefig("./src/Decision Tree/accuracy_pie_chart.png")
+    plt.show()
+    
     # 🔷 Plot Confusion Matrix
     cm = confusion_matrix(y_test, y_pred)
     plt.figure(figsize=(6, 4))
@@ -62,22 +80,6 @@ def evaluate():
     else:
         print("ROC Curve skipped (not a binary classification).")
 
-    # SHAP Values (only if input size is reasonable)
-    if X_test.shape[0] > 500:
-        # To make it fast, sample 500 test examples
-        X_sample = shap.sample(X_test, 500, random_state=42)
-    else:
-        X_sample = X_test
-
-    explainer = shap.TreeExplainer(model)
-    shap_values = explainer.shap_values(X_sample)
-
-    # Plot SHAP Summary Plot
-    plt.figure()
-    shap.summary_plot(shap_values, X_sample, show=False)
-    plt.title("SHAP Summary Plot")
-    plt.savefig("results/results/decision_tree_shap_summary.png")
-    plt.show()
 
 
     # 🔷 Visualize the Decision Tree
