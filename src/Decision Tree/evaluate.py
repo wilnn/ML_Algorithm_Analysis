@@ -7,6 +7,11 @@ import shap
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, roc_curve, auc
 from sklearn.tree import plot_tree
 
+# Actual feature names for the Adult dataset (Census Income dataset)
+feature_names_adult = [
+    "age", "workclass", "fnlwgt", "education", "education-num", "marital-status", "occupation",
+    "relationship", "race", "sex", "capital-gain", "capital-loss", "hours-per-week"
+]
 
 def evaluate():
     # Load test data and labels from .npy files
@@ -81,6 +86,81 @@ def evaluate():
         print("ROC Curve skipped (not a binary classification).")
 
 
+    # --- SHAP EVALUATION ---
+    print("Running SHAP evaluation...")
+
+    # Check if the model has the 'feature_names_in_' attribute
+    try:
+        feature_names = model.feature_names_in_
+    except AttributeError:
+        # In case 'feature_names_in_' is not available, generate default names
+        feature_names = [f"feature_{i}" for i in range(X_test.shape[1])]
+    
+     # Use actual feature names (provided in 'feature_names_adult')
+    feature_names = feature_names_adult  # Assign actual feature names for the Adult dataset
+
+    # Convert to DataFrame
+    X_test_df = pd.DataFrame(X_test, columns=feature_names)
+
+    # Use TreeExplainer explicitly
+    explainer = shap.TreeExplainer(model)
+    shap_values = explainer.shap_values(X_test_df)
+
+    # Check if SHAP values are a list (for multiclass)
+    if isinstance(shap_values, list):
+        print("Multiclass classification detected.")
+        # Select SHAP values for class 1 (positive class)
+        shap_values_to_plot = shap_values[1]  # class 1 SHAP values
+    else:
+        print("Binary classification detected.")
+        shap_values_to_plot = shap_values  # SHAP values for binary classification
+
+    # Ensure SHAP values are 3D (samples x features x classes)
+    if shap_values_to_plot.ndim == 3:
+        # Take SHAP values for the positive class (usually class 1 in binary classification)
+        shap_values_to_plot = shap_values_to_plot[:, :, 1]
+
+    # Ensure shap_values_to_plot is 2D
+    if shap_values_to_plot.ndim != 2:
+        raise ValueError(f"Expected 2D SHAP values, but got {shap_values_to_plot.ndim}D.")
+
+    # SHAP summary plot (Feature Importance)
+    shap.summary_plot(shap_values_to_plot, X_test_df, show=True)
+
+        # --- Feature Importance ---
+    # Calculate feature importance as the mean absolute SHAP value across all samples
+    feature_importance = np.abs(shap_values_to_plot).mean(axis=0)
+    feature_importance_df = pd.DataFrame(
+        {'Feature': feature_names, 'Importance': feature_importance}
+    ).sort_values(by='Importance', ascending=False)
+
+    print("\nFeature Importance (based on SHAP values):")
+    print(feature_importance_df)
+
+    # --- Feature Contribution Bar Plot ---
+    # Plot the bar plot for feature importance
+    plt.figure(figsize=(10, 6))
+    sns.barplot(x='Importance', y='Feature', data=feature_importance_df, palette="viridis")
+    plt.title("Feature Importance (based on SHAP values)")
+    plt.xlabel("Mean Absolute SHAP Value")
+    plt.ylabel("Feature")
+    plt.tight_layout()
+    plt.savefig("./src/Decision Tree/feature_importance_bar_plot.png")
+    plt.show()
+
+    # --- Feature Contribution (SHAP Force Plot) ---
+    shap.initjs()  # Initialize JavaScript for visualizations
+
+    sample_idx = 1  # Choose a sample (you can choose other samples as needed)
+
+    # Create force plot for the first sample
+    force_plot = shap.force_plot(
+        explainer.expected_value[1],  # Expected value for class 1 (positive class)
+        shap_values_to_plot[sample_idx],  # SHAP values for the selected sample
+        X_test_df.iloc[sample_idx],  # Feature values for the selected sample
+    )
+    shap.save_html("./src/Decision Tree/shap_force_plot.html", force_plot)
+    print("SHAP force plot saved to './src/Decision Tree/shap_force_plot.html'")
 
     # 🔷 Visualize the Decision Tree
     # If your model was trained on a DataFrame, feature names might be available
