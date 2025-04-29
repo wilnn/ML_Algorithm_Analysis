@@ -57,10 +57,10 @@ def evaluate():
     # 🔷 Plot Confusion Matrix
     cm = confusion_matrix(y_test, y_pred)
     plt.figure(figsize=(6, 4))
-    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues")
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=["<=50K", ">50K"], yticklabels=["<=50K", ">50K"])
     plt.title("Confusion Matrix")
-    plt.xlabel("Predicted Label")
-    plt.ylabel("True Label")
+    plt.xlabel("Predicted")
+    plt.ylabel("True")
     plt.tight_layout()
     plt.savefig("./src/Decision Tree/confusion_matrix.png")
     plt.show()
