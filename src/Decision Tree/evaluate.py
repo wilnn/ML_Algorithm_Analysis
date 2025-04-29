@@ -24,7 +24,7 @@ def evaluate():
     report = classification_report(y_test, y_pred)
 
     # Save evaluation metrics
-    with open("results/results/decision_tree_evaluation.txt", "w") as f:
+    with open("./src/Decision Tree/decision_tree_evaluation.txt", "w") as f:
         f.write(f"Accuracy: {accuracy}\n")
         f.write(report)
     
@@ -57,7 +57,7 @@ def evaluate():
     plt.xlabel("Predicted Label")
     plt.ylabel("True Label")
     plt.tight_layout()
-    plt.savefig("results/results/confusion_matrix.png")
+    plt.savefig("./src/Decision Tree/confusion_matrix.png")
     plt.show()
 
      # ROC Curve
@@ -75,7 +75,7 @@ def evaluate():
         plt.ylabel("True Positive Rate")
         plt.title("Receiver Operating Characteristic (ROC) Curve")
         plt.legend(loc="lower right")
-        plt.savefig("results/results/decision_tree_roc_curve.png")
+        plt.savefig("./src/Decision Tree/decision_tree_roc_curve.png")
         plt.show()
     else:
         print("ROC Curve skipped (not a binary classification).")
@@ -92,7 +92,7 @@ def evaluate():
     plt.figure(figsize=(20, 10))
     plot_tree(model, filled=True, feature_names=feature_names, class_names=True, rounded=True)
     plt.title("Decision Tree Visualization")
-    plt.savefig("results/results/decision_tree_structure.png")
+    plt.savefig("./src/Decision Tree/decision_tree_structure.png")
     plt.show()
 
 if __name__ == "__main__":
