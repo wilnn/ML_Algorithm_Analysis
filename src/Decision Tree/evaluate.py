@@ -6,7 +6,7 @@ import seaborn as sns
 import shap
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, roc_curve, auc
 from sklearn.tree import plot_tree
-
+from data_preprossing import data_preprocessing
 # Actual feature names for the Adult dataset (Census Income dataset)
 feature_names_adult = [
     "age", "workclass", "fnlwgt", "education", "education-num", "marital-status", "occupation",
@@ -14,9 +14,8 @@ feature_names_adult = [
 ]
 
 def evaluate():
-    # Load test data and labels from .npy files
-    X_test = np.load("data/processed/not_scaled/test_data.npy")
-    y_test = np.load("data/processed/not_scaled/test_labels.npy")
+    
+    X_train, X_test, y_train, y_test = data_preprocessing()
 
     # Load trained model
     model = joblib.load("results/models/decision_tree.pkl")
@@ -68,7 +67,7 @@ def evaluate():
      # ROC Curve
     if len(np.unique(y_test)) == 2:  # binary classification check
         y_proba = model.predict_proba(X_test)[:, 1]
-        fpr, tpr, thresholds = roc_curve(y_test, y_proba)
+        fpr, tpr, thresholds = roc_curve(y_test, y_proba, pos_label=">50K")
         roc_auc = auc(fpr, tpr)
 
         plt.figure(figsize=(6, 5))
@@ -100,7 +99,8 @@ def evaluate():
     feature_names = feature_names_adult  # Assign actual feature names for the Adult dataset
 
     # Convert to DataFrame
-    X_test_df = pd.DataFrame(X_test, columns=feature_names)
+    X_test_df = X_test.copy()   # already a DataFrame with the correct columns
+    feature_names = X_test_df.columns
 
     # Use TreeExplainer explicitly
     explainer = shap.TreeExplainer(model)

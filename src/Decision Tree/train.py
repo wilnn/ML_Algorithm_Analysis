@@ -3,11 +3,14 @@ import joblib
 from model import get_model
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import accuracy_score
+from data_preprossing import data_preprocessing
 
 def train():
-    # Load processed data from .npy files
-    X_train = np.load("data/processed/not_scaled/train_data.npy")
-    y_train = np.load("data/processed/not_scaled/train_labels.npy")
+
+    # Get preprocessed data
+    X_train, X_test, y_train, y_test = data_preprocessing()
+
+
 
     # Get model and train
     model = get_model()
