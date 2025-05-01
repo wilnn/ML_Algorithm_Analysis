@@ -1,16 +1,21 @@
 import time
+import pandas as pd
+import shap
+import numpy as np
+from ucimlrepo import fetch_ucirepo
+
 start_time = time.time()
 
 import matplotlib.pyplot as plt
 from sklearn.neural_network import MLPClassifier
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, classification_report, RocCurveDisplay
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from data.data_preprossing import data_preprocessing
 
 
 def NeuralNetwork(NodeCountPerHiddenLayer, ActivationFunction, Optimizer,
                   LearningRateType, MaxIterations, Seed, PrintProgress,
-                  X_train, X_test, Y_train, Y_test, MeasureMetrics):
+                  X_train, X_test, Y_train, Y_test, Feature_names, MeasureMetrics):
 
     model = MLPClassifier(
         hidden_layer_sizes=NodeCountPerHiddenLayer,
@@ -21,23 +26,11 @@ def NeuralNetwork(NodeCountPerHiddenLayer, ActivationFunction, Optimizer,
         random_state=Seed,
         verbose=PrintProgress
     )
-
     model.fit(X_train, Y_train)
     score = model.score(X_test, Y_test)
     print(f"Test accuracy: {score * 100:.2f}%")
 
     if MeasureMetrics:
-        train_accuracy = []
-        for i in range(1, MaxIterations + 1):
-            Y_train_pred = model.predict(X_train)
-            train_accuracy.append(accuracy_score(Y_train, Y_train_pred))
-
-        plt.plot(train_accuracy)
-        plt.title("Training Accuracy Progression")
-        plt.xlabel("Iterations")
-        plt.ylabel("Accuracy")
-        plt.show()
-
         plt.plot(model.loss_curve_)
         plt.title("Training Loss Progression")
         plt.xlabel("Iterations")
@@ -51,6 +44,19 @@ def NeuralNetwork(NodeCountPerHiddenLayer, ActivationFunction, Optimizer,
         disp.plot(cmap="Blues")
         plt.title("Confusion Matrix")
         plt.show()
+        print("Classification Report:\n", classification_report(Y_test, y_pred))
+
+        nn_disp = RocCurveDisplay.from_estimator(model, X_test, Y_test)
+        plt.plot([0, 1], [0, 1], linestyle='--', color='gray')
+        plt.show()
+
+        X_background = shap.utils.sample(X_train, 50, random_state=Seed)
+        explainer = shap.KernelExplainer(model.predict_proba, X_background)
+
+        X_eval = X_test[:1000]
+        shap_values = explainer.shap_values(X_eval, nsamples=100)
+        X_eval_df = pd.DataFrame(X_eval, columns=Feature_names)
+        shap.summary_plot(shap_values[:, :, 1], X_eval_df, plot_type="bar")
 
     end_time = time.time()
     print(f"Time taken: {end_time - start_time:.2f} seconds")
@@ -60,6 +66,10 @@ def NeuralNetwork(NodeCountPerHiddenLayer, ActivationFunction, Optimizer,
 
 # hard to converge with more hidden layers and nodes, and accuracy is the same
 if __name__ == "__main__":
+    adult = fetch_ucirepo(id=2)
+    X = adult.data.features.drop('education', axis=1)
+    feature_names = X.columns.tolist()
+
     X_train, X_test, Y_train, Y_test = data_preprocessing("StandardScaler")
 
     NeuralNetwork(
@@ -74,6 +84,7 @@ if __name__ == "__main__":
         X_test=X_test,
         Y_train=Y_train,
         Y_test=Y_test,
+        Feature_names=feature_names,
         MeasureMetrics=True
     )
     NeuralNetwork(
@@ -88,6 +99,7 @@ if __name__ == "__main__":
         X_test=X_test,
         Y_train=Y_train,
         Y_test=Y_test,
+        Feature_names=feature_names,
         MeasureMetrics=True
     )
     NeuralNetwork(
@@ -102,6 +114,7 @@ if __name__ == "__main__":
         X_test=X_test,
         Y_train=Y_train,
         Y_test=Y_test,
+        Feature_names=feature_names,
         MeasureMetrics=True
     )
 
